@@ -105,12 +105,11 @@ export type EventSubscriber<TPayload = unknown> = (
  * }
  * ```
  */
-export interface IEventBus {
+export interface IEventPublisher {
 	/**
 	 * @description Publishes a single domain event.
 	 */
 	publish(event: DomainEvent): Promise<void>;
-
 	/**
 	 * @description
 	 * Publishes all domain events in the provided array.
@@ -118,6 +117,34 @@ export interface IEventBus {
 	 */
 	publishAll(events: ReadonlyArray<DomainEvent>): Promise<void>;
 }
+
+export interface IEventSubscriberRegistry {
+	/**
+	 * @description
+	 * Registers a subscriber for a specific event type.
+	 *
+	 * Multiple subscribers for the same `type` are all invoked when that event
+	 * is published. Subscribing the same function twice for the same type will
+	 * register it twice — callers are responsible for deduplication if needed.
+	 *
+	 * @param type       The event type to listen for, e.g. `'order:placed'`.
+	 * @param subscriber The callback to invoke when a matching event is published.
+	 */
+	subscribe<TPayload = unknown>(
+		type: string,
+		subscriber: EventSubscriber<TPayload>,
+	): void;
+	/**
+	 * @description
+	 * Removes all subscribers for a given event type.
+	 *
+	 * @param type The event type whose subscribers should be removed.
+	 * @returns The number of subscribers that were removed.
+	 */
+	unsubscribe(type: string): number;
+}
+
+export interface IEventBus extends IEventPublisher, IEventSubscriberRegistry {}
 
 /**
  * @description
